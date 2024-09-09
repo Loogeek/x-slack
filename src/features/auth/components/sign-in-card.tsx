@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,6 +26,21 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
+  const [signInError, setSignInError] = useState<string | null>(null);
+
+  const handlePasswordSignIn = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setPending(true);
+    signIn("password", { email, password, flow: "signIn" })
+      .catch((error) => {
+        setSignInError("Invalid email or password");
+        console.log(error);
+      })
+      .finally(() => {
+        setPending(false);
+      });
+  };
 
   const handleProviderSignIn = (value: "google" | "github") => {
     setPending(true);
@@ -41,8 +57,14 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
           Use your email or another service to continue
         </CardDescription>
       </CardHeader>
+      {!!signInError && (
+        <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">
+          <TriangleAlert className="size-4" />
+          <p>{signInError}</p>
+        </div>
+      )}
       <CardContent className="space-y-5 px-0 pb-0">
-        <form className="space-y-2.5">
+        <form className="space-y-2.5" onSubmit={handlePasswordSignIn}>
           <Input
             disabled={pending}
             value={email}
@@ -59,14 +81,14 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <Button type="submit" className="w-full" size="lg" disabled={false}>
+          <Button type="submit" className="w-full" size="lg" disabled={pending}>
             Continue
           </Button>
         </form>
         <Separator />
         <div className="flex flex-col gap-y-2.5">
           <Button
-            disabled={false}
+            disabled={pending}
             onClick={() => handleProviderSignIn("google")}
             variant="outline"
             size="lg"
